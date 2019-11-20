@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# pylint: disable=C0103, C0330, R0914
+# pylint: disable=C0103, C0330, R0914, W1639
 
 from __future__ import absolute_import, division
-from math import floor, log2
+from math import ceil, floor, log2
 from multiprocessing import Pool
 from itertools import chain, product
 from sys import argv
@@ -35,10 +35,8 @@ def mul_tau(
 ) -> List[Tuple[int, int, int, int]]:
     results = []
 
-    for s in range(s_min, s_max + 1):
+    for s in range(s_min, min(ceil(t * n / 2), s_max) + 1):
         tau_len = tau_length(t, n, s)
-        if tau_len < 1:  # no need to go further if the length is illegal
-            break
         if (m + 1) > log2(tau_len) > m:
             results.append((t, n, s, t * n))
 
@@ -54,6 +52,7 @@ def mul_tau_wrapper(args: List[str]):
     if mode == "equal":
         params = [(t, n, n, n, m) for t, n, smin, smax, m in params]
 
+    params = filter(lambda x: x[1] <= x[2], params)
     if mode in ("equal", "all"):
         with Pool() as pool:
             results = pool.starmap(mul_tau, params)
