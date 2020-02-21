@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# pylint: disable=C0103, C0326
+# pylint: disable=C0103, C0326, W0631
 
 from __future__ import absolute_import
 from collections import defaultdict
@@ -10,26 +10,27 @@ from typing import Tuple
 
 def create_bench_file(params: Tuple[Tuple[str, int, int, int]]) -> str:
     header = (
-        """#include "primitives/OpenSSLSha256.h"\n"""
-        """#include "primitives/OpenSSLSha512.h"\n"""
-        """#include "wots/BSConstantSumWots.h"\n"""
-        """#include "wots/ClassicWots.h"\n"""
-        """#include "wots/ConstantSumWots.h"\n"""
-        """#include "wots/MConstantSumWots.h"\n"""
-        """#include "wots/OriginalConstantSumWots.h"\n"""
-        """#include "wots/OriginalOptConstantSumWots.h"\n"""
+        """#include "OpenSSLSha256.h"\n"""
+        """#include "OpenSSLSha512.h"\n"""
+        """#include "Wots.h"\n"""
+        """#include "WotsCS.h"\n"""
+        """#include "WotsDCS.h"\n"""
+        """#include "WotsMDCS.h"\n"""
+        """#include "WotsDBCS.h"\n"""
+        """#include "WotsMDBCS.h"\n"""
         """#include <benchmark/benchmark.h>\n"""
         "\ntemplate <class OTS>\n"
         "class OTSFixture : public benchmark::Fixture, "
         "protected OpenSSLSha256 {\n"
         "public:\n"
-        "  ByteArray data, data2;\n"
-        "  OTS ots;\n"
-        "  std::vector<unsigned int> fing;\n"
+        "  ByteArray data;\n"
+        "  OTS * ots;\n"
         "  virtual void SetUp(benchmark::State &state) {\n"
-        """    data = hstoba("0102030F");\n"""
-        "    data2 = digest(data);\n"
-        "    fing = ots.genFingerprint(data2);\n"
+        "    ots = new OTS();\n"
+        """    data = hstoba("FFAB4DF3010102030F");\n"""
+        "  }\n"
+        "  virtual void TearDown(benchmark::State &state) {\n"
+        "    delete ots;\n"
         "  }\n"
         "};\n\n"
     )
@@ -37,38 +38,25 @@ def create_bench_file(params: Tuple[Tuple[str, int, int, int]]) -> str:
 
     template = (
         "BENCHMARK_TEMPLATE_F(OTSFixture, plot_{},\n"
-        "                     {}ConstantSumWots<{}, {}, {}, {}>)\n"
+        "                     {}<{}, {}, {}, {}>)\n"
         "(benchmark::State &state) {{\n"
         "  std::vector<unsigned int> a;\n"
         "  for (auto _ : state) {{\n"
         "    data = digest(data);\n"
-        "    benchmark::DoNotOptimize(a = ots.genFingerprint(data));\n"
-        "  }}\n"
-        "}}\n\n"
-    )
-
-    template_verify = (
-        "BENCHMARK_TEMPLATE_F(OTSFixture, plot_{},\n"
-        "                     {}ConstantSumWots<{}, {}, {}, {}>)\n"
-        "(benchmark::State &state) {{\n"
-        "  std::vector<unsigned int> a;\n"
-        "  for (auto _ : state) {{\n"
-        "    data = digest(data2);\n"
-        "    benchmark::DoNotOptimize(ots.check_encoding(data, fing));\n"
+        "    benchmark::DoNotOptimize(a = ots->gen_fingerprint(data));\n"
         "  }}\n"
         "}}\n\n"
     )
 
     _file = header
     for h, t, n, s in params:
-        _set = (str(t) + str(n) + str(s), h, n, t, s)
-        _file += template.format(_set[0] + "O", "Original", *_set[1:])
-        _file += template.format(_set[0] + "OS", "OriginalOpt", *_set[1:])
-        _file += template.format(_set[0], "", *_set[1:])
-        _file += template.format(_set[0] + "M", "M", *_set[1:])
-        _file += template.format(_set[0] + "BS", "BS", *_set[1:])
-        _file += template_verify.format(_set[0] + "BSV", "BS", *_set[1:])
+        _set = (str(t) + str(n) + str(s), h, t, n, s)
+        _file += template.format(_set[0] + "_DCS", "WotsDCS", *_set[1:])
+        _file += template.format(_set[0] + "_MDCS", "WotsMDCS", *_set[1:])
+        _file += template.format(_set[0] + "_DBCS", "WotsDBCS", *_set[1:])
+        _file += template.format(_set[0] + "_MDBCS", "WotsMDBCS", *_set[1:])
     _file += footer
+    _file.replace("OpenSSLSha256", "OpenSSLSha{}".format(h))
 
     return _file
 
@@ -91,8 +79,6 @@ def get_params(mode: str, m: int) -> Tuple[Tuple[str, int, int, int]]:
 
     for t, v in group_t.items():
         if mode == "min":
-            # minvc = min(v, key=lambda x: x[1])
-            # results += (("OpenSSLSha{}".format(m), t, minvc[0], minvc[-1]),)
             mingc = min(v, key=lambda x: x[3])
             results += (("OpenSSLSha{}".format(m), t, mingc[0], mingc[-1]),)
         elif mode == "equal":

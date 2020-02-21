@@ -1,7 +1,6 @@
 \documentclass{standalone}
 
 \usepackage{pgfplots}
-\usepackage{xstring}
 
 \pgfplotsset{compat=newest}
 
@@ -16,32 +15,22 @@
       legend columns = -1, font = \scriptsize, draw = none, fill = none
     },
   ]
-    \IfSubStr{\type}{equal}{
-      \addplot[mark=Mercedes star, mark size=1, only marks, gray] gnuplot [raw gnuplot] {
-        plot 'data-\type.txt' using 2:5
-      };
-      \addlegendentry{$\mathbf{F}$}
-      \addplot[mark=diamond, mark size=1, only marks, gray] gnuplot [raw gnuplot] {
-        plot 'data-\type.txt' using 2:6
-      };
-      \addlegendentry{$\mathbf{F'}$}
-    }{}
     \addplot[mark=triangle, mark size=1, only marks] gnuplot [raw gnuplot] {
+      plot 'data-\type.txt' using 2:5
+    };
+    \addlegendentry{$\textsc{dcs}$}
+    \addplot[mark=pentagon, mark size=1, only marks] gnuplot [raw gnuplot] {
+      plot 'data-\type.txt' using 2:6
+    };
+    \addlegendentry{$\textsc{dcs-m}$}
+    \addplot[mark=square, mark size=0.75, only marks, gray] gnuplot [raw gnuplot] {
       plot 'data-\type.txt' using 2:7
     };
-    \addlegendentry{$\mathbf{F_{1}}$}
-    \addplot[mark=pentagon, mark size=1, only marks] gnuplot [raw gnuplot] {
+    \addlegendentry{$\textsc{dbcs}$}
+    \addplot[mark=asterisk, mark size=1, only marks, gray] gnuplot [raw gnuplot] {
       plot 'data-\type.txt' using 2:8
     };
-    \addlegendentry{$\mathbf{F_{1}}$-m}
-    \addplot[mark=square, mark size=0.75, only marks, gray] gnuplot [raw gnuplot] {
-      plot 'data-\type.txt' using 2:9
-    };
-    \addlegendentry{$\mathbf{F_{2}}$}
-    \addplot[mark=asterisk, mark size=1, only marks, gray] gnuplot [raw gnuplot] {
-      plot 'data-\type.txt' using 2:10
-    };
-    \addlegendentry{$\mathbf{V}$}
+    \addlegendentry{$\textsc{dbcs-m}$}
   \end{semilogyaxis}
 \end{tikzpicture}
 

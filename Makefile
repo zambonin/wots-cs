@@ -1,5 +1,5 @@
-CXXFLAGS = -O3 -Wall -std=c++17 -I include/wots/pqcrypto
-LDFLAGS = -lbenchmark -lgmp -lcrypto
+CXXFLAGS = -O3 -Wall -std=c++17 -I include -Wno-unused-variable
+LDFLAGS = -lbenchmark -lgmp -lcrypto -fopenmp
 SHELL := /bin/bash
 TARGETS := min-256 min-512 equal-256 equal-512
 
@@ -7,7 +7,7 @@ parse_results = \
 	sed -e '1,3d; s/\s\+/ /g' $(1) \
 	| paste -d\  - - - - - - \
 	| awk -F"[><, ]" '{ \
-			print $$3, $$7, $$5, $$9, $$12, $$28, $$44, $$60, $$76, $$92 \
+			print $$3, $$5, $$7, $$9, $$12, $$28, $$44, $$60, $$76, $$92 \
 		}' \
 	| column -t
 
@@ -19,6 +19,7 @@ endef
 define GEN_CPP
 bench-$(TYPE).cpp: params-$(TYPE).txt
 	python src/gen-cpp-bench.py $(subst -, ,$(TYPE)) >| bench-$(TYPE).cpp
+	sed -i 's/private/protected/' include/bytearray/include/bytearray.hpp
 endef
 
 define EXEC_CPP
@@ -47,5 +48,6 @@ tables: params-min-256.txt params-min-512.txt
 clean:
 	$(RM) params-*
 	$(RM) bench-* raw-* data-*
+	sed -i 's/protected/private/' include/bytearray/include/bytearray.hpp
 	$(foreach TYPE,$(TARGETS),$(RM) fig-$(TYPE).pgf*;)
 	$(foreach TYPE,$(TARGETS),latexmk -CA fig-$(TYPE).pdf;)
