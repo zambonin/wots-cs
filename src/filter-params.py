@@ -18,8 +18,8 @@ def table_1() -> str:
         "  \\setlength{\\tabcolsep}{7pt}\n"
         "  \\centering\n"
         "  \\caption{Number of iterations of $f$ for usual\n"
-        "    parameters of \\wots{}. Underlines are averaged\n"
-        "    over multiple signatures.}\\label{tab:wots}\n"
+        "    parameters of \\wots{}. Values underlined are\n"
+        "    averages over multiple signatures.}\\label{tab:wots}\n"
         "  \\begin{tabular}{*{6}{r}}\n"
         "    \\toprule\n"
         "    $m$ & $w$ & $t$ & $G_{c}$ & $S_{c}$ & $V_{c}$ \\\\ \\midrule\n"
@@ -47,83 +47,63 @@ def table_1() -> str:
     return table
 
 
-def subtable_2(path: str, m: int) -> str:
+def subtable_4(path: str, m: int) -> str:
     with open(path) as f:
         data = f.readlines()
 
     lines = [list(map(float, x)) for x in map(str.split, data)]
     group_t = defaultdict(list)
-    for t, n, s, tn in lines:
-        group_t[t].append((n, tn, tn - s, s))
+    for t, n, s, _ in lines:
+        group_t[t].append((n, t * n, t * n - s, s))
 
     wint = defaultdict(list)
     for w in [1 << 4, 1 << 6, 1 << 8]:  # winternitz parameter
         t = wt(m, w)
         gc = t * (w - 1)
-        sc = vc = "$\\underline{{{}}}$".format(gc // 2)
+        sc = vc = gc // 2
         wint[t].append((w, gc, sc, vc))
 
-    subtable_header = (
-        "  \\subfloat[$m = {}$]{{\\begin{{tabular}}{{rc*{{5}}{{r}}}}\n"
-        "    \\toprule\n"
-        "    $t$ & Variant & $n$ & $G_{{c}}$ & $S_{{c}}$ & $V_{{c}}$ "
-        "& $\\Delta V_{{c}}$ \\\\ \\midrule\n".format(m)
-    )
-    subtable_footer = "    \\bottomrule\n" "  \\end{tabular}}\n"
     line_fmt = (
-        "{:>24} & {:>14} & {:>5.0f} & {:>5.0f} "
-        "& {:>20} & {:>20} & {:>10} \\\\\n"
+        "{:>24} & {:>4} & {:>4.0f} & {:>6.0f} "
+        "& {:>6.0f} & {:>10} & {:>10} \\\\\n"
     )
 
-    subtable = subtable_header
-    for k, v in wint.items():
-        t1, var1, n1, gc1, sc1, vc1 = (
-            "\\multirow{{3}}{{*}}{{{:>3}}}".format(k),
-            "Classical",
-            *v[0],
-        )
-        t2, var2, n2, gc2, sc2, vc2 = (
-            "",
-            "$\\min(V_{c})$",
-            *min(group_t[k], key=lambda x: x[3]),
-        )
-        t3, var3, n3, gc3, sc3, vc3 = (
-            "",
-            "$\\min(G_{c})$",
-            *min(group_t[k], key=lambda x: x[1]),
-        )
-        delta2 = "${:>+6.2f}\\%$".format(100 * (-1 + vc2 / (gc1 // 2)))
-        delta3 = "${:>+6.2f}\\%$".format(100 * (-1 + vc3 / (gc1 // 2)))
-        subtable += line_fmt.format(t1, var1, n1, gc1, sc1, vc1, "---")
+    subtable = ""
+    for index, params in enumerate(wint.items()):
+        _, gc1, _, vc1 = params[1][0]
+        n2, gc2, _, vc2 = min(group_t[params[0]], key=lambda x: x[1])
+        delta_gc = "${:>+6.2f}\\%$".format(100 * (-1 + gc2 / gc1))
+        delta_vc = "${:>+6.2f}\\%$".format(100 * (-1 + vc2 / vc1))
+
+        first = "\\multirow{{3}}{{*}}{{{}}}".format(m) if not index else ""
         subtable += line_fmt.format(
-            t2, var2, n2, gc2, int(sc2), int(vc2), delta2
+            first, params[0], n2, gc2, vc2, delta_gc, delta_vc
         )
-        subtable += (
-            line_fmt.format(t3, var3, n3, gc3, int(sc3), int(vc3), delta3)
-            + "    \\midrule\n"
-        )
-    subtable += subtable_footer
+    subtable += "    \\midrule\n"
 
     return subtable
 
 
-def table_2():
+def table_4():
     table_header = (
-        "\\begin{table*}[htbp]\n"
-        "  \\setlength{\\tabcolsep}{6pt}\n"
+        "\\begin{table}[htbp]\n"
+        "  \\setlength{\\tabcolsep}{6.9pt}\n"
+        "  \\renewcommand{\\arraystretch}{1.2}\n"
         "  \\centering\n"
-        "  \\caption{Suggested generalized parameters for constant-sum "
-        "\\wots{},\n"
-        "    minimizing key generation or signature verification costs.\n"
-        "    Mean costs over multiple signatures are underlined.}"
+        "  \\caption{Suggested parameters for\n"
+        "    \\textsc{Wots-cs}, with $G_{c}$ and\n"
+        "    $V_{c}$ as compared to \\textsc{Wots}.}"
         "\\label{tab:params}\n"
+        "  \\begin{tabular}{rc*{5}rr}\n"
+        "    \\toprule\n"
+        "    $m$ & $t$ & $n$ & $G_{c}$ & $V_{c}$ &\n"
+        "      $\\Delta G_{c}$ & $\\Delta V_{c}$ \\\\ \\midrule \n"
     )
-    table_footer = "\\end{table*}"
+    table_footer = "    \\bottomrule\n  \\end{tabular}\n\\end{table}"
 
     table = table_header
-    table += subtable_2("params-min-256.txt", 256)
-    table += "  \\qquad\n"
-    table += subtable_2("params-min-512.txt", 512)
+    table += subtable_4("params-min-256.txt", 256)
+    table += subtable_4("params-min-512.txt", 512)
     table += table_footer
 
     return table
@@ -131,4 +111,4 @@ def table_2():
 
 if __name__ == "__main__":
     print(table_1())
-    print(table_2())
+    print(table_4())

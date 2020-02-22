@@ -3,9 +3,7 @@
 # pylint: disable=C0103, C0330, R0914, W1639
 
 from __future__ import absolute_import, division
-from math import ceil, floor, log2
-from multiprocessing import Pool
-from itertools import chain, product
+from math import floor, log2
 from sys import argv
 from typing import List, Tuple
 
@@ -30,48 +28,61 @@ def tau_length(t: int, n: int, s: int) -> int:
     return tau
 
 
-def mul_tau(
-    t: int, n: int, s_min: int, s_max: int, m: int
+def mul_tau_min(
+    low_t: int, upp_t: int, m: int
 ) -> List[Tuple[int, int, int, int]]:
-    results = []
+    params = []
 
-    for s in range(s_min, min(ceil(t * n / 2), s_max) + 1):
-        tau_len = tau_length(t, n, s)
-        if (m + 1) > log2(tau_len) > m:
-            results.append((t, n, s, t * n))
+    for t in range(upp_t, low_t - 1, -1):
+        n = 0
+        s = floor(t * n / 2)
 
-    return results
+        while log2(tau_length(t, n, s)) < m:
+            n += 1
+            s = floor(t * n / 2)
+
+        while log2(tau_length(t, n, s)) >= m:
+            n -= 1
+        n += 1
+
+        while log2(tau_length(t, n, s)) >= m:
+            s -= 1
+        s += 1
+        params.append((t, n, s, m))
+
+    return params
 
 
-def mul_tau_wrapper(args: List[str]):
-    mode, t_min, t_max, n_min, n_max, s_min, s_max, m = args
-    params = product(
-        range(t_min, t_max + 1), range(n_min, n_max + 1), [s_min], [s_max], [m]
-    )
+def mul_tau_eq(
+    low_t: int, upp_t: int, m: int
+) -> List[Tuple[int, int, int, int]]:
+    params = []
 
-    if mode == "equal":
-        params = [(t, n, n, n, m) for t, n, smin, smax, m in params]
+    for t in range(upp_t, low_t - 1, -1):
+        s = 0
+        while log2(tau_length(t, s, s)) < m:
+            s += 1
 
-    params = filter(lambda x: x[1] <= x[2], params)
-    if mode in ("equal", "all"):
-        with Pool() as pool:
-            results = pool.starmap(mul_tau, params)
-            for t, n, s, tn in chain.from_iterable(results):
-                print("{:3d} {:4d} {:6d} {:6d}".format(t, n, s, tn))
+        while log2(tau_length(t, s, s)) >= m:
+            s -= 1
+        s += 1
+        params.append((t, s, s, m))
+
+    return params
 
 
 if __name__ == "__main__":
     assert len(argv) == 3
 
     PARAMS = {
-        "min": {
-            "256": ["all", 30, 80, 16, 512, 256, 8192, 256],
-            "512": ["all", 60, 140, 16, 512, 256, 8192, 512],
-        },
-        "equal": {
-            "256": ["equal", 8, 80, 8, 16384, 0, 0, 256],
-            "512": ["equal", 20, 140, 8, 16384, 0, 0, 512],
-        },
+        "min": {"256": [30, 80, 256], "512": [60, 140, 512]},
+        "equal": {"256": [10, 80, 256], "512": [20, 140, 512]},
     }
 
-    mul_tau_wrapper(PARAMS[argv[1]][argv[2]])
+    if argv[1] == "min":
+        param = mul_tau_min(*PARAMS[argv[1]][argv[2]])
+    elif argv[1] == "equal":
+        param = mul_tau_eq(*PARAMS[argv[1]][argv[2]])
+
+    for p in param:
+        print(*p)
