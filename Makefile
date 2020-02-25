@@ -1,15 +1,7 @@
 CXXFLAGS = -O3 -Wall -std=c++17 -I include -Wno-unused-variable
 LDFLAGS = -lbenchmark -lgmp -lcrypto -fopenmp
 SHELL := /bin/bash
-TARGETS := min-256 min-512 equal-256 equal-512
-
-parse_results = \
-	sed -e '1,3d; s/\s\+/ /g' $(1) \
-	| paste -d\  - - - - - - \
-	| awk -F"[><, ]" '{ \
-			print $$3, $$5, $$7, $$9, $$12, $$28, $$44, $$60, $$76, $$92 \
-		}' \
-	| column -t
+TARGETS := min-256 min-512 equal-256 equal-512 prob-256 prob-512
 
 define SEARCH
 params-$(TYPE).txt:
@@ -18,14 +10,14 @@ endef
 
 define GEN_CPP
 bench-$(TYPE).cpp: params-$(TYPE).txt
-	python src/gen-cpp-bench.py $(subst -, ,$(TYPE)) >| bench-$(TYPE).cpp
+	python src/gen-cpp-bench.py params-$(TYPE).txt >| bench-$(TYPE).cpp
 	sed -i 's/private/protected/' include/bytearray/include/bytearray.hpp
 endef
 
 define EXEC_CPP
 data-$(TYPE).txt: bench-$(TYPE)
-	./$$< >| raw-data-$(TYPE).txt
-	$$(call parse_results,raw-data-$(TYPE).txt) >| data-$(TYPE).txt
+	./$$< | tee raw-data-$(TYPE).txt
+	awk -f src/parse-encoding-time.awk raw-data-$(TYPE).txt >| data-$(TYPE).txt
 endef
 
 define FIGURE

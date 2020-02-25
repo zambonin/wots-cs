@@ -1,6 +1,7 @@
 \documentclass{standalone}
 
 \usepackage{pgfplots}
+\usepackage{xstring}
 
 \pgfplotsset{compat=newest}
 
@@ -8,29 +9,45 @@
 
 \begin{tikzpicture}
   \begin{semilogyaxis}[
-    scale only axis, grid style = { dotted }, grid = major, xlabel = { $t$ },
-    width = 7cm, height = 3.5cm, ylabel = { Time (ns) },
-    tick label style = { font = \scriptsize },
+    scale only axis, grid style = { dotted }, grid = major,
+    xlabel = { \IfSubStr{\type}{prob}{$n$}{$t$} },
+    width = 7cm, height = 3.5cm, tick label style = { font = \scriptsize },
+    ylabel = { \IfSubStr{\type}{prob}{}{Time (ns)} },
     legend style = {
       legend columns = -1, font = \scriptsize, draw = none, fill = none
     },
   ]
+  \IfSubStr{\type}{prob}{
+    \addplot[mark=Mercedes star, mark size=1, only marks, gray] gnuplot [raw gnuplot] {
+      plot 'data-\type.txt' using 2:4
+    };
+    \addlegendentry{$\textsc{cky-i}$}
     \addplot[mark=triangle, mark size=1, only marks] gnuplot [raw gnuplot] {
       plot 'data-\type.txt' using 2:5
     };
     \addlegendentry{$\textsc{dcs}$}
-    \addplot[mark=pentagon, mark size=1, only marks] gnuplot [raw gnuplot] {
+    \addplot[mark=square, mark size=0.75, only marks, gray] gnuplot [raw gnuplot] {
       plot 'data-\type.txt' using 2:6
+    };
+    \addlegendentry{$\textsc{dbcs}$}
+  }{
+    \addplot[mark=triangle, mark size=1, only marks] gnuplot [raw gnuplot] {
+      plot 'data-\type.txt' using 1:7
+    };
+    \addlegendentry{$\textsc{dcs}$}
+    \addplot[mark=pentagon, mark size=1, only marks] gnuplot [raw gnuplot] {
+      plot 'data-\type.txt' using 1:5
     };
     \addlegendentry{$\textsc{dcs-m}$}
     \addplot[mark=square, mark size=0.75, only marks, gray] gnuplot [raw gnuplot] {
-      plot 'data-\type.txt' using 2:7
+      plot 'data-\type.txt' using 1:6
     };
     \addlegendentry{$\textsc{dbcs}$}
     \addplot[mark=asterisk, mark size=1, only marks, gray] gnuplot [raw gnuplot] {
-      plot 'data-\type.txt' using 2:8
+      plot 'data-\type.txt' using 1:4
     };
     \addlegendentry{$\textsc{dbcs-m}$}
+  }
   \end{semilogyaxis}
 \end{tikzpicture}
 

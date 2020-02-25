@@ -15,7 +15,8 @@ def wt(m: int, w: int) -> int:
 def table_1() -> str:
     table_header = (
         "\\begin{table}[htbp]\n"
-        "  \\setlength{\\tabcolsep}{7pt}\n"
+        "  \\renewcommand{\\arraystretch}{1.2}\n"
+        "  \\setlength{\\tabcolsep}{11.9pt}\n"
         "  \\centering\n"
         "  \\caption{Number of iterations of $f$ for usual\n"
         "    parameters of \\wots{}. Values underlined are\n"
@@ -87,8 +88,8 @@ def subtable_4(path: str, m: int) -> str:
 def table_4():
     table_header = (
         "\\begin{table}[htbp]\n"
-        "  \\setlength{\\tabcolsep}{6.9pt}\n"
         "  \\renewcommand{\\arraystretch}{1.2}\n"
+        "  \\setlength{\\tabcolsep}{6.9pt}\n"
         "  \\centering\n"
         "  \\caption{Suggested parameters for\n"
         "    \\textsc{Wots-cs}, with $G_{c}$ and\n"

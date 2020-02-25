@@ -77,12 +77,17 @@ if __name__ == "__main__":
     PARAMS = {
         "min": {"256": [30, 80, 256], "512": [60, 140, 512]},
         "equal": {"256": [10, 80, 256], "512": [20, 140, 512]},
+        "prob": {"256": [34, 34, 256], "512": [131, 131, 512]},
     }
 
     if argv[1] == "min":
         param = mul_tau_min(*PARAMS[argv[1]][argv[2]])
     elif argv[1] == "equal":
         param = mul_tau_eq(*PARAMS[argv[1]][argv[2]])
+    elif argv[1] == "prob":
+        param = mul_tau_min(*PARAMS[argv[1]][argv[2]])
+        T, N, S, M = param[0]
+        param = [(T, i, S, M) for i in range(N, S, 50)] + [(T, S, S, M)]
 
     for p in param:
         print(*p)

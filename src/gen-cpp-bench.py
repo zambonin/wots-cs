@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=C0103, C0326, W0631
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 from collections import defaultdict
+from math import floor
 from sys import argv
 from typing import Tuple
 
@@ -48,13 +49,29 @@ def create_bench_file(params: Tuple[Tuple[str, int, int, int]]) -> str:
         "}}\n\n"
     )
 
+    is_prob = (
+        len(set(i[0] for i in params)) == 1
+        and len(set(i[2] for i in params)) == 1
+    )
+
     _file = header
-    for h, t, n, s in params:
-        _set = (str(t) + str(n) + str(s), h, t, n, s)
+    for t, n, s, h in params:
+        _set = (str(t) + str(n) + str(s), "OpenSSLSha{}".format(h), t, n, s)
+
+        if is_prob and n > floor(s / 4):
+            _file += template.format(_set[0] + "_CS", "WotsCS", *_set[1:])
+
         _file += template.format(_set[0] + "_DCS", "WotsDCS", *_set[1:])
-        _file += template.format(_set[0] + "_MDCS", "WotsMDCS", *_set[1:])
+
+        if not is_prob:
+            _file += template.format(_set[0] + "_MDCS", "WotsMDCS", *_set[1:])
+
         _file += template.format(_set[0] + "_DBCS", "WotsDBCS", *_set[1:])
-        _file += template.format(_set[0] + "_MDBCS", "WotsMDBCS", *_set[1:])
+
+        if not is_prob:
+            _file += template.format(
+                _set[0] + "_MDBCS", "WotsMDBCS", *_set[1:]
+            )
     _file += footer
     _file.replace("OpenSSLSha256", "OpenSSLSha{}".format(h))
 
@@ -65,30 +82,9 @@ def parse_params(path: str) -> defaultdict:
     with open(path) as f:
         data = f.readlines()
 
-    lines = [list(map(int, x)) for x in map(str.split, data)]
-    group_t = defaultdict(list)
-    for t, n, s, tn in lines:
-        group_t[t].append((n, tn, tn - s, s))
-
-    return group_t
-
-
-def get_params(mode: str, m: int) -> Tuple[Tuple[str, int, int, int]]:
-    group_t = parse_params("params-{}-{}.txt".format(mode, m))
-    results = ()
-
-    for t, v in group_t.items():
-        if mode == "min":
-            mingc = min(v, key=lambda x: x[3])
-            results += (("OpenSSLSha{}".format(m), t, mingc[0], mingc[-1]),)
-        elif mode == "equal":
-            mingc = min(v, key=lambda x: x[1])
-            results += (("OpenSSLSha{}".format(m), t, mingc[0], mingc[0]),)
-
-    return results
+    return [list(map(int, x)) for x in map(str.split, data)]
 
 
 if __name__ == "__main__":
-    assert len(argv) == 3
-    assert argv[1] == "min" or argv[1] == "equal"
-    print(create_bench_file(get_params(argv[1], int(argv[2]))))
+    assert len(argv) == 2
+    print(create_bench_file(parse_params(argv[1])))
