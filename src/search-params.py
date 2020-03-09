@@ -14,6 +14,22 @@ def binomial(n: int, k: int) -> int:
     return comb(n, k, exact=True)
 
 
+def tau_encoding(i: int, t: int, n: int, s: int) -> Tuple[int]:
+    if t == 1:
+        return (s,)
+
+    k = 0
+    bound_l = 0
+    bound_r = tau_length(t - 1, n, s)
+
+    while not bound_l <= i < bound_r:
+        k += 1
+        bound_l = bound_r
+        bound_r += tau_length(t - 1, n, s - k)
+
+    return (k,) + tau_encoding(i - bound_l, t - 1, n, s - k)
+
+
 def tau_length(t: int, n: int, s: int) -> int:
     k = min(t, floor(s / (n + 1)))
     tau = 0
