@@ -3,11 +3,16 @@
 # pylint: disable=C0103, C0330, R0914, W1639
 
 from __future__ import absolute_import, division
-from math import floor, log2
+from math import ceil, floor, log2
 from sys import argv
 from typing import List, Tuple
 
 from scipy.special import comb
+
+
+def wt(m: int, w: int) -> int:
+    t1 = ceil(m / log2(w))
+    return t1 + floor(log2(t1 * (w - 1)) / log2(w)) + 1
 
 
 def binomial(n: int, k: int) -> int:
@@ -85,6 +90,19 @@ def mul_tau_eq(
         params.append((t, s, s, m))
 
     return params
+
+
+def single_tau_min_ver(t: int, m: int) -> Tuple[int, int]:
+    s = 1
+    while log2(tau_length(t, s, s)) < m:
+        s += 1
+
+    n = s
+    while log2(tau_length(t, n, s)) > m:
+        n -= 1
+
+    n += 1
+    return n, s
 
 
 if __name__ == "__main__":

@@ -4,39 +4,33 @@
 
 from __future__ import absolute_import, division
 from collections import defaultdict
-from math import ceil, floor, log2
-
-
-def wt(m: int, w: int) -> int:
-    t1 = ceil(m / log2(w))
-    return t1 + floor(log2(t1 * (w - 1)) / log2(w)) + 1
+from importlib import import_module
 
 
 def table_1() -> str:
     table_header = (
         "\\begin{table}[htbp]\n"
         "  \\renewcommand{\\arraystretch}{1.2}\n"
-        "  \\setlength{\\tabcolsep}{11.9pt}\n"
+        "  \\setlength{\\tabcolsep}{10pt}\n"
         "  \\centering\n"
         "  \\caption{Number of iterations of $f$ for usual\n"
-        "    parameters of \\wots{}. Values underlined are\n"
-        "    averages over multiple signatures.}\\label{tab:wots}\n"
+        "    parameters of \\textsc{Wots}.}\\label{tab:wots}\n"
         "  \\begin{tabular}{*{6}{r}}\n"
         "    \\toprule\n"
-        "    $m$ & $w$ & $t$ & $G_{c}$ & $S_{c}$ & $V_{c}$ \\\\ \\midrule\n"
+        "    $m$ & $t$ & $w$ & $C(\\textsc{Gen})$ & "
+        "$\\overline{C(\\textsc{Sig})}$\n"
+        "      & $\\overline{C(\\textsc{Ver})}$ \\\\ \\midrule\n"
     )
     table_footer = "    \\bottomrule\n" "  \\end{tabular}\n" "\\end{table}"
-    line_fmt = (
-        "{:>24} & {:>6.0f} & {:>6.0f} & {:>6.0f} " "& {:>20} & {:>20} \\\\\n"
-    )
+    line_fmt = "{:>24} & {:>6d} & {:>6d} & {:>6d} & {:>10} & {:>10} \\\\\n"
 
     results = defaultdict(list)
     for m in [256, 512]:  # e.g. sha-256, sha-512
         for w in [1 << 4, 1 << 6, 1 << 8]:  # winternitz parameter
-            t = wt(m, w)
+            t = SEARCH.wt(m, w)
             gc = t * (w - 1)
-            sc = vc = "$\\underline{{{}}}$".format(gc // 2)
-            results[m].append((w, t, gc, sc, vc))
+            sc = vc = "${:>6.1f}$".format(gc / 2)
+            results[m].append((t, w, gc, sc, vc))
 
     table = table_header
     for t, v in results.items():
@@ -48,7 +42,52 @@ def table_1() -> str:
     return table
 
 
-def subtable_4(path: str, m: int) -> str:
+def table_2() -> str:
+    table_header = (
+        "\\begin{table}[htbp]\n"
+        "  \\renewcommand{\\arraystretch}{1.2}\n"
+        "  \\centering\n"
+        "  \\caption{Number of iterations of $f$ for \\textsc{Wots-cs}\n"
+        "    using \\textsc{MinVer} for a given $t$. Recall that\n"
+        "    $C(\\textsc{Ver}) = s$.}\\label{tab:cswots}\n"
+        "  \\begin{tabular}{*{7}{r}}\n"
+        "    \\toprule\n"
+        "    $m$ & $w$ & $t$ & $C(\\textsc{Gen})$ & $C(\\textsc{Sig})$\n"
+        "      & $C(\\textsc{Ver})$ & $\\Pr_{enc}$ \\\\ \\midrule\n"
+    )
+    table_footer = "    \\bottomrule\n" "  \\end{tabular}\n" "\\end{table}"
+    line_fmt = (
+        "{:>24} & {:>24} & {:>6d} & {:>8d} & {:>8d} & {:>24} & {:>14} \\\\\n"
+    )
+    ts = "\\multirow{{2}}{{*}}{{{}}}"
+
+    results = defaultdict(list)
+    for m in [256, 512]:  # e.g. sha-256, sha-512
+        for w in [1 << 4, 1 << 6, 1 << 8]:  # winternitz parameter
+            t = SEARCH.wt(m, w)
+            n, s = SEARCH.single_tau_min_ver(t, m)
+            pr_enc = SEARCH.tau_length(t, n, s) / SEARCH.tau_length(t, s, s)
+            results[m].append(
+                (ts.format(t), s, t * s, t * s - s, ts.format(s), "$1.00$")
+            )
+            results[m].append(
+                ("", n, t * n, t * n - s, "", "$\\sim{:.4f}$".format(pr_enc))
+            )
+
+    table = table_header
+    for t, v in results.items():
+        table += line_fmt.format("\\multirow{{6}}{{*}}{{{}}}".format(t), *v[0])
+        table += line_fmt.format("", *v[1])
+        table += line_fmt.format("", *v[2])
+        table += line_fmt.format("", *v[3])
+        table += line_fmt.format("", *v[4])
+        table += line_fmt.format("", *v[5]) + "    \\midrule\n"
+    table += table_footer
+
+    return table
+
+
+def subtable_3(path: str, m: int) -> str:
     with open(path) as f:
         data = f.readlines()
 
@@ -59,7 +98,7 @@ def subtable_4(path: str, m: int) -> str:
 
     wint = defaultdict(list)
     for w in [1 << 4, 1 << 6, 1 << 8]:  # winternitz parameter
-        t = wt(m, w)
+        t = SEARCH.wt(m, w)
         gc = t * (w - 1)
         sc = vc = gc // 2
         wint[t].append((w, gc, sc, vc))
@@ -85,31 +124,32 @@ def subtable_4(path: str, m: int) -> str:
     return subtable
 
 
-def table_4():
+def table_3():
     table_header = (
         "\\begin{table}[htbp]\n"
         "  \\renewcommand{\\arraystretch}{1.2}\n"
-        "  \\setlength{\\tabcolsep}{6.9pt}\n"
+        "  \\setlength{\\tabcolsep}{7pt}\n"
         "  \\centering\n"
-        "  \\caption{Suggested parameters for\n"
-        "    \\textsc{Wots-cs}, with $G_{c}$ and\n"
-        "    $V_{c}$ as compared to \\textsc{Wots}.}"
-        "\\label{tab:params}\n"
+        "  \\caption{Suggested parameters for \\textsc{Wots-cs}\n"
+        "    using \\textsc{MinGen} for a given $t$\n"
+        "    as compared to \\textsc{Wots}.}\\label{tab:params}\n"
         "  \\begin{tabular}{rc*{5}rr}\n"
         "    \\toprule\n"
-        "    $m$ & $t$ & $n$ & $G_{c}$ & $V_{c}$ &\n"
-        "      $\\Delta G_{c}$ & $\\Delta V_{c}$ \\\\ \\midrule \n"
+        "    $m$ & $t$ & $n$ & $G_{c}$ & $V_{c}$\n"
+        "      & $\\Delta G_{c}$ & $\\Delta V_{c}$ \\\\ \\midrule \n"
     )
     table_footer = "    \\bottomrule\n  \\end{tabular}\n\\end{table}"
 
     table = table_header
-    table += subtable_4("params-min-256.txt", 256)
-    table += subtable_4("params-min-512.txt", 512)
+    table += subtable_3("params-min-256.txt", 256)
+    table += subtable_3("params-min-512.txt", 512)
     table += table_footer
 
     return table
 
 
 if __name__ == "__main__":
+    SEARCH = import_module("search-params")
     print(table_1())
-    print(table_4())
+    print(table_2())
+    print(table_3())
