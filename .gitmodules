@@ -1,3 +1,7 @@
 [submodule "include/bytearray"]
 	path = include/bytearray
 	url = git@github.com:Megaxela/bytearray.git
+[submodule "src/xmss-reference"]
+	path = src/xmss-reference
+	url = git@github.com:lucasperin/xmss-reference.git
+	branch = constant-sum

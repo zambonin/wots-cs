@@ -34,8 +34,15 @@ $(foreach TYPE,$(TARGETS),$(eval $(GEN_CPP)))
 $(foreach TYPE,$(TARGETS),$(eval $(EXEC_CPP)))
 $(foreach TYPE,$(TARGETS),$(eval $(FIGURE)))
 
-tables: params-min-256.txt params-min-512.txt
+wots-tables: params-min-256.txt params-min-512.txt
 	python src/filter-params.py
+
+xmss-table: MAKEFLAGS = -j --no-print-directory -C src/xmss-reference
+xmss-table: src/xmss-reference/Makefile
+	$(foreach N,$(shell seq 1 32),\
+		$(MAKE) $(MAKEFLAGS) benchmark_fast >| "data-tree-$(N).txt";)
+	awk -f src/parse-xmss-cycles.awk data-tree-*.txt >| data-xmss-256-512.txt
+	python src/tree-comparison.py
 
 clean:
 	$(RM) params-*
