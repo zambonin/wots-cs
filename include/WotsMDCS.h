@@ -3,7 +3,7 @@
 #include <array>
 
 template <class D, int T, int N, int S>
-class WotsMDCS : public virtual WotsDCS<D, T, N, S> {
+class WotsMDCS : public WotsDCS<D, T, N, S> {
 public:
   WotsMDCS() noexcept { this->memoize(); }
 
@@ -11,7 +11,7 @@ public:
     this->memoize();
   }
 
-  virtual mpz_class tau(int t, int n, int s) { return this->cache[t - 1][s]; }
+  mpz_class tau(int t, int n, int s) { return this->cache[t - 1][s]; }
 
 protected:
   void memoize() {

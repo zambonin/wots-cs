@@ -2,7 +2,7 @@
 #include "WotsDCS.h"
 
 template <class D, int T, int N, int S>
-class WotsDBCS : public virtual WotsDCS<D, T, N, S> {
+class WotsDBCS : public WotsDCS<D, T, N, S> {
 public:
   // proposition 3
   virtual mpz_class rank(int t, int n, int s, int l) {
@@ -19,7 +19,7 @@ public:
   }
 
   // algorithm 3 (example implementation from std::upper_bound)
-  virtual uint_vec constant_sum(int t, int n, int s, mpz_class &I) {
+  uint_vec constant_sum(int t, int n, int s, mpz_class &I) {
     uint_vec p;
 
     for (int i = 0; i < t; i++) {

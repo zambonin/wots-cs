@@ -2,10 +2,10 @@
 #include "WotsCS.h"
 
 template <class D, int T, int N, int S>
-class WotsDCS : public virtual WotsCS<D, T, N, S> {
+class WotsDCS : public WotsCS<D, T, N, S> {
 public:
   // must be signed to consider negative cases
-  virtual mpz_class binomial(int n, int k) {
+  mpz_class binomial(int n, int k) {
     if (n < k || n < 0 || k < 0) {
       return 0;
     }
@@ -54,7 +54,7 @@ public:
     return encoding;
   }
 
-  virtual uint_vec gen_fingerprint(ByteArray &data) {
+  uint_vec gen_fingerprint(ByteArray &data) {
     ByteArray aux = this->digest(data);
     mpz_class i;
     i.set_str(std::to_string(aux), 16);
@@ -63,7 +63,7 @@ public:
 
 protected:
   // algorithm 4 (not covered in the benchmarks due to its simplicity)
-  virtual bool fast_verify(ByteArray &data, std::vector<ByteArray> &signature,
+  bool fast_verify(ByteArray &data, std::vector<ByteArray> &signature,
                            uint_vec &encoding) {
     ByteArray check;
     for (long unsigned int i = 0; i < encoding.size(); i++) {

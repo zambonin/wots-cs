@@ -3,7 +3,7 @@
 #include <gmpxx.h>
 
 template <class D, int T, int N, int S>
-class WotsCS : public virtual Wots<D, N> {
+class WotsCS : public Wots<D, N> {
 public:
   const unsigned int t1() const noexcept final { return T; }
 
@@ -60,7 +60,7 @@ public:
   const uint_vec gen_checksum(uint_vec &blocks) { return {}; }
 
 protected:
-  virtual void gen_public_key() {
+  void gen_public_key() {
     this->gen_private_key();
 
     ByteArray pub;

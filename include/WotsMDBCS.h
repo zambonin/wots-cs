@@ -3,7 +3,7 @@
 #include <array>
 
 template <class D, int T, int N, int S>
-class WotsMDBCS : public virtual WotsDBCS<D, T, N, S> {
+class WotsMDBCS : public WotsDBCS<D, T, N, S> {
 public:
   WotsMDBCS() noexcept { this->memoize(); }
 
@@ -11,7 +11,7 @@ public:
     this->memoize();
   }
 
-  virtual mpz_class rank(int t, int n, int s, int j) {
+  mpz_class rank(int t, int n, int s, int j) {
     return this->cache[t - 1][s][j];
   }
 

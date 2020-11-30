@@ -1,7 +1,11 @@
 #!/usr/bin/env awk -f
 
 BEGIN {
-    getline; split($0, header, "; ")
+    getline;
+    while ($0 ~ !/^\./) {
+        getline;
+    }
+    split($0, header, "; ")
 }
 
 /Generating/ {

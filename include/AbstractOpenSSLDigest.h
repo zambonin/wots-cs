@@ -4,20 +4,18 @@
 
 class AbstractOpenSSLDigest : public AbstractDigest {
 public:
-  virtual ByteArray digest(ByteArray &data) const noexcept {
+  ByteArray digest(ByteArray &data) const noexcept {
     return evp_chain(data, 1);
   }
 
-  virtual ByteArray digest_chain(ByteArray &data,
-                                 const unsigned int n) const noexcept {
+  ByteArray digest_chain(ByteArray &data, const unsigned int n) const noexcept {
     return evp_chain(data, n);
   }
 
 protected:
   virtual const EVP_MD *algorithm() const noexcept = 0;
 
-  virtual ByteArray evp_chain(ByteArray &data,
-                              const unsigned int n) const noexcept {
+  ByteArray evp_chain(ByteArray &data, const unsigned int n) const noexcept {
     if (n <= 0) {
       return data;
     }

@@ -19,7 +19,7 @@ public:
 
   virtual ~Wots() {}
 
-  virtual const unsigned int t() const noexcept {
+  const unsigned int t() const noexcept {
     return this->t1() + this->t2();
   }
 
@@ -32,7 +32,7 @@ public:
     return (const unsigned int)std::floor(u) + 1;
   }
 
-  virtual const unsigned int n() const noexcept { return this->len(); }
+  const unsigned int n() const noexcept { return this->len(); }
 
   virtual uint_vec gen_fingerprint(ByteArray &data) {
     ByteArray fingerprint = this->digest(data);
@@ -63,7 +63,7 @@ public:
     return ret;
   }
 
-  virtual const std::vector<ByteArray> sign(ByteArray &data) {
+  const std::vector<ByteArray> sign(ByteArray &data) {
     uint_vec blocks = this->gen_fingerprint(data);
     uint_vec cs = this->gen_checksum(blocks);
     blocks.insert(blocks.end(), cs.begin(), cs.end());
@@ -77,7 +77,7 @@ public:
     return signature;
   }
 
-  virtual bool verify(ByteArray &data, std::vector<ByteArray> &signature) {
+  bool verify(ByteArray &data, std::vector<ByteArray> &signature) {
     uint_vec blocks = this->gen_fingerprint(data);
     uint_vec cs = this->gen_checksum(blocks);
     blocks.insert(blocks.end(), cs.begin(), cs.end());
@@ -92,7 +92,7 @@ public:
   }
 
 protected:
-  virtual void gen_private_key() {
+  void gen_private_key() {
     std::stringstream ss;
     for (unsigned int i = 0; i < this->t(); i++) {
       ss.str(std::string());

@@ -13,8 +13,8 @@ def table_1() -> str:
         "  \\renewcommand{\\arraystretch}{1.2}\n"
         "  \\setlength{\\tabcolsep}{10pt}\n"
         "  \\centering\n"
-        "  \\caption{Number of iterations of $f$ for usual\n"
-        "    parameters of \\textsc{Wots}.}\\label{tab:wots}\n"
+        "  \\caption{Number of iterations of $c_{k}$ for usual\n"
+        "    parameters of \\textsc{Wots+}.}\\label{tab:wots}\n"
         "  \\begin{tabular}{*{6}{r}}\n"
         "    \\toprule\n"
         "    $m$ & $t$ & $w$ & $C(\\textsc{Gen})$ & "
@@ -47,12 +47,13 @@ def table_2() -> str:
         "\\begin{table}[htbp]\n"
         "  \\renewcommand{\\arraystretch}{1.2}\n"
         "  \\centering\n"
-        "  \\caption{Number of iterations of $f$ for \\textsc{Wots-cs}\n"
-        "    using \\textsc{MinVer} for a given $t$. Recall that\n"
+        "  \\caption{Number of iterations of $c_{k}$ for \\textsc{Wots-cs}\n"
+        "    using \\textsc{MinVer}, and success probability of\n"
+        "    \\textsc{cky-i} given as $\\Pr_{enc}$. Recall that\n"
         "    $C(\\textsc{Ver}) = s$.}\\label{tab:cswots}\n"
         "  \\begin{tabular}{*{7}{r}}\n"
         "    \\toprule\n"
-        "    $m$ & $w$ & $t$ & $C(\\textsc{Gen})$ & $C(\\textsc{Sig})$\n"
+        "    $m$ & $t$ & $w$ & $C(\\textsc{Gen})$ & $C(\\textsc{Sig})$\n"
         "      & $C(\\textsc{Ver})$ & $\\Pr_{enc}$ \\\\ \\midrule\n"
     )
     table_footer = "    \\bottomrule\n" "  \\end{tabular}\n" "\\end{table}"
@@ -104,20 +105,19 @@ def subtable_3(path: str, m: int) -> str:
         wint[t].append((w, gc, sc, vc))
 
     line_fmt = (
-        "{:>24} & {:>4} & {:>4.0f} & {:>6.0f} "
-        "& {:>6.0f} & {:>10} & {:>10} \\\\\n"
+        "{:>24} & {:>4} & {:>4.0f} & {:>6.0f} & {:>6.0f} "
+        "& {:>6.0f} & {:>10} \\\\\n"
     )
 
     subtable = ""
     for index, params in enumerate(wint.items()):
-        _, gc1, _, vc1 = params[1][0]
-        n2, gc2, _, vc2 = min(group_t[params[0]], key=lambda x: x[1])
+        _, gc1, sc1, vc1 = params[1][0]
+        n2, gc2, sc2, vc2 = min(group_t[params[0]], key=lambda x: x[1])
         delta_gc = "${:>+6.2f}\\%$".format(100 * (-1 + gc2 / gc1))
-        delta_vc = "${:>+6.2f}\\%$".format(100 * (-1 + vc2 / vc1))
 
         first = "\\multirow{{3}}{{*}}{{{}}}".format(m) if not index else ""
         subtable += line_fmt.format(
-            first, params[0], n2, gc2, vc2, delta_gc, delta_vc
+            first, params[0], n2, gc2, sc2, vc2, delta_gc,
         )
     subtable += "    \\midrule\n"
 
@@ -128,15 +128,16 @@ def table_3():
     table_header = (
         "\\begin{table}[htbp]\n"
         "  \\renewcommand{\\arraystretch}{1.2}\n"
-        "  \\setlength{\\tabcolsep}{7pt}\n"
+        "  \\setlength{\\tabcolsep}{6pt}\n"
         "  \\centering\n"
         "  \\caption{Suggested parameters for \\textsc{Wots-cs}\n"
         "    using \\textsc{MinGen} for a given $t$\n"
-        "    as compared to \\textsc{Wots}.}\\label{tab:params}\n"
+        "    as compared to \\textsc{Wots+}.}\\label{tab:params}\n"
         "  \\begin{tabular}{rc*{5}rr}\n"
         "    \\toprule\n"
-        "    $m$ & $t$ & $n$ & $G_{c}$ & $V_{c}$\n"
-        "      & $\\Delta G_{c}$ & $\\Delta V_{c}$ \\\\ \\midrule \n"
+        "    $m$ & $t$ & $n$ & $C(\\textsc{Gen})$ & $C(\\textsc{Sig})$\n"
+        "      & $C(\\textsc{Ver})$ & $\\Delta C(\\textsc{Gen})$ "
+        "\\\\ \\midrule \n"
     )
     table_footer = "    \\bottomrule\n  \\end{tabular}\n\\end{table}"
 

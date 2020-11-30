@@ -18,7 +18,7 @@ END {
         for (variant in variants) {
             n = values[param][variant]
             if (!n) n = "inf"
-            printf "%s ", n
+            printf "%s ", n / 1000
         }
         printf "\n"
     }

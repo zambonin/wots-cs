@@ -1,6 +1,7 @@
 \documentclass{standalone}
 
 \usepackage{pgfplots}
+\usepackage{textcomp}
 \usepackage{xstring}
 
 \pgfplotsset{compat=newest}
@@ -12,7 +13,7 @@
     scale only axis, grid style = { dotted }, grid = major,
     xlabel = { \IfSubStr{\type}{prob}{$n$}{$t$} },
     width = 7cm, height = 3.5cm, tick label style = { font = \scriptsize },
-    ylabel = { \IfSubStr{\type}{prob}{}{Time (ns)} },
+    ylabel = { \IfSubStr{\type}{prob}{}{Time (\textmu s)} },
     legend style = {
       legend columns = -1, font = \scriptsize, draw = none, fill = none
     },
@@ -23,11 +24,11 @@
     };
     \addlegendentry{$\textsc{cky-i}$}
     \addplot[mark=triangle, mark size=1, only marks] gnuplot [raw gnuplot] {
-      plot 'data-\type.txt' using 2:5
+      plot 'data-\type.txt' using 2:6
     };
     \addlegendentry{$\textsc{dcs}$}
     \addplot[mark=square, mark size=0.75, only marks, gray] gnuplot [raw gnuplot] {
-      plot 'data-\type.txt' using 2:6
+      plot 'data-\type.txt' using 2:5
     };
     \addlegendentry{$\textsc{dbcs}$}
   }{
@@ -36,7 +37,7 @@
     };
     \addlegendentry{$\textsc{dcs}$}
     \addplot[mark=pentagon, mark size=1, only marks] gnuplot [raw gnuplot] {
-      plot 'data-\type.txt' using 1:5
+      plot 'data-\type.txt' using 1:4
     };
     \addlegendentry{$\textsc{dcs-m}$}
     \addplot[mark=square, mark size=0.75, only marks, gray] gnuplot [raw gnuplot] {
@@ -44,7 +45,7 @@
     };
     \addlegendentry{$\textsc{dbcs}$}
     \addplot[mark=asterisk, mark size=1, only marks, gray] gnuplot [raw gnuplot] {
-      plot 'data-\type.txt' using 1:4
+      plot 'data-\type.txt' using 1:5
     };
     \addlegendentry{$\textsc{dbcs-m}$}
   }
