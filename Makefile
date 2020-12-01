@@ -38,7 +38,7 @@ include/bytearray/include/bytearray.hpp:
 
 src/xmss-reference/Makefile:
 	git submodule update --init $(dir $@)
-	sed -i '/CFLAGS /s/$$/ -fcommon/' $@
+	sed -i '/CC /s/gcc/clang/; /CFLAGS /s/$$/ -fcommon/' $@
 
 $(foreach TYPE,$(TARGETS),$(eval $(SEARCH)))
 $(foreach TYPE,$(TARGETS),$(eval $(GEN_CPP)))
@@ -51,7 +51,7 @@ wots-tables: params-min-256.txt params-min-512.txt
 
 xmss-data: MAKEFLAGS = -j --no-print-directory -C src/xmss-reference
 xmss-data: src/xmss-reference/Makefile
-	$(foreach N,$(shell seq 1 128),\
+	$(foreach N,$(shell seq 1 8),\
 		$(MAKE) $(MAKEFLAGS) benchmark_fast >| "data-tree-$(N).txt";)
 
 data-xmss-256-512.txt:

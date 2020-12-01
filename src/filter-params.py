@@ -5,6 +5,7 @@
 from __future__ import absolute_import, division
 from collections import defaultdict
 from importlib import import_module
+from math import log2
 
 
 def table_1() -> str:
@@ -53,7 +54,7 @@ def table_2() -> str:
         "    $C(\\textsc{Ver}) = s$.}\\label{tab:cswots}\n"
         "  \\begin{tabular}{*{7}{r}}\n"
         "    \\toprule\n"
-        "    $m$ & $t$ & $w$ & $C(\\textsc{Gen})$ & $C(\\textsc{Sig})$\n"
+        "    $m$ & $t$ & $n$ & $C(\\textsc{Gen})$ & $C(\\textsc{Sig})$\n"
         "      & $C(\\textsc{Ver})$ & $\\Pr_{enc}$ \\\\ \\midrule\n"
     )
     table_footer = "    \\bottomrule\n" "  \\end{tabular}\n" "\\end{table}"
@@ -149,8 +150,63 @@ def table_3():
     return table
 
 
+def table_5():
+    def wotsp_sec_level(l, t, w):
+        return l - log2(t * w) - log2(2 * w + 1)
+
+    def wotscs_sec_level(l, t, n, s):
+        return (
+            l
+            + log2(SEARCH.tau_length(t - 1, n, s - n + 1))
+            - log2(t * (2 * n + 1) * SEARCH.tau_length(t, n, s))
+        )
+
+    l = 256
+    params = {
+        34: (256, 226, 3643),
+        67: (16, 15, 400),
+    }
+
+    table_header = (
+        "\\begin{table}[htbp]\n"
+        "  \\renewcommand{\\arraystretch}{1.2}\n"
+        "  \\setlength{\\tabcolsep}{7pt}\n"
+        "  \\centering\n"
+        "  \\caption{Security level $q$ for \\textsc{Wots+} and\n"
+        "    \\textsc{Wots-cs} and $\lambda = m = 256$.}\\label{tab:bounds}\n"
+        "  \\begin{tabular}{rc*{5}rr}\n"
+        "    \\toprule\n"
+        "    Adversary & $t$ & $w$ & $n$ & $s$ & \\textsc{Wots+}\n"
+        "      & \\textsc{Wots-cs} \\\\ \\midrule\n"
+    )
+    table_footer = "    \\bottomrule\n  \\end{tabular}\n\\end{table}"
+
+    line_fmt = (
+        "{:>30} & {:>4} & {:>4} & {:>4} & {:>4} & {:>4.2f} & {:>4.2f} \\\\\n"
+    )
+
+    table = table_header
+
+    for lamb in [l, l / 2]:
+        for t, v in params.items():
+            header = ""
+            if t == 34 and lamb == l:
+                header = "\\multirow{{2}}{{*}}{{{}}}".format("Classical")
+            elif t == 34 and lamb == l / 2:
+                header = "\\multirow{{2}}{{*}}{{{}}}".format("Quantum")
+            table += line_fmt.format(
+                header, t, *v, wotsp_sec_level(lamb, t, v[0]),
+                wotscs_sec_level(lamb, t, v[1], v[2]),
+            )
+
+    table += table_footer
+
+    return table
+
+
 if __name__ == "__main__":
     SEARCH = import_module("search-params")
     print(table_1())
     print(table_2())
     print(table_3())
+    print(table_5())
